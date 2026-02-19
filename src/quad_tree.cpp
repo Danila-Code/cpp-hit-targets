@@ -23,11 +23,11 @@ Point Rectangle::getMidPoint() const {
 }
 
 int Rectangle::getHeight() const {
-    return right_up.y - left_down.y;
+    return right_up.y - left_down.y + 1;
 }
 
 int Rectangle::getWidth() const {
-    return right_up.x - left_down.x;
+    return right_up.x - left_down.x + 1;
 }
 
 bool Rectangle::hasPoint(const Point& point) const {
