@@ -30,6 +30,7 @@ struct Rectangle {
     int getWidth() const;
 
     bool hasPoint(const Point& point) const;
+    bool intersectCircle(const Circle& circle) const;
 
     Point left_down;
     Point right_up;

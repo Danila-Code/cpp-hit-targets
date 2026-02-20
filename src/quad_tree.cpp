@@ -34,6 +34,13 @@ bool Rectangle::hasPoint(const Point& point) const {
     return numberInBorder(point.x, left_down.x, right_up.x) && numberInBorder(point.y, left_down.y, right_up.y);
 }
 
+bool Rectangle::intersectCircle(const Circle& circle) const {
+    int closest_x = std::max(left_down.x, std::min(right_up.x, circle.center.x));
+    int closest_y = std::max(left_down.y, std::min(right_up.y, circle.center.y));
+
+    return circle.hasPoint(Point(closest_x, closest_y));
+}
+
 //================= class QuadTree::QuadNode methods =============================
 QuadTree::QuadNode::QuadNode(Rectangle rect) : rect_{rect} {
     points_.reserve(NODE_COUNT);
@@ -60,29 +67,19 @@ bool QuadTree::QuadNode::insertPoint(Point point) {
 size_t QuadTree::QuadNode::getCount(Circle circle) const {
     size_t points_count = 0;
 
+    if (!rect_.intersectCircle(circle)) {
+        return points_count;
+    }
+
     for (const auto& p : points_) {
         if (circle.hasPoint(p)) {
             ++points_count;
         }
     }
 
-    if (sub_nodes_) {
-        Point mid_point = rect_.getMidPoint();
-
-        if (circle.center.x - circle.radius <= mid_point.x && circle.center.y - circle.radius <= mid_point.y) {
-            points_count += sub_nodes_.value()[0].getCount(circle);
-        }
-
-        if (circle.center.x + circle.radius > mid_point.x && circle.center.y - circle.radius <= mid_point.y) {
-            points_count += sub_nodes_.value()[1].getCount(circle);
-        }
-
-        if (circle.center.x - circle.radius <= mid_point.x && circle.center.y + circle.radius > mid_point.y) {
-            points_count += sub_nodes_.value()[2].getCount(circle);
-        }
-
-        if (circle.center.x + circle.radius > mid_point.x && circle.center.y + circle.radius > mid_point.y) {
-            points_count += sub_nodes_.value()[3].getCount(circle);
+    if (sub_nodes_.has_value()) {
+        for (const auto& node : sub_nodes_.value()) {
+            points_count += node.getCount(circle);
         }
     }
     return points_count;
