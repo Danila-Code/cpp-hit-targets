@@ -82,10 +82,18 @@ void MainWindow::paintEvent(QPaintEvent* event) {
     QRect drawArea(10, 10, 700, 500);
     painter.translate(drawArea.left(), drawArea.top());
 
+    /*painter.setBrush(Qt::red);
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), 1, 1);*/
+
     // Масштабирование: 100x100 -> 700x500
     double scaleX = static_cast<double>(drawArea.width()) / 100.0;
     double scaleY = static_cast<double>(drawArea.height()) / 100.0;
     painter.scale(scaleX, scaleY);
+
+    /*painter.setBrush(Qt::red);
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), 1, 1);*/
 
     // Рисуем границы квадрантов
     drawQuadTree(painter, root);
@@ -141,7 +149,8 @@ void MainWindow::drawQuadTree(QPainter& painter, const QuadTree::QuadNode* const
     Rectangle rect = node->getRect();
 
     painter.setPen(QPen(Qt::gray, 0.2));
-    painter.drawRect(rect.left_down.x, rect.right_up.y, rect.getWidth(), rect.getHeight());
+    painter.drawRect(rect.left_down.x, 99 - rect.right_up.y, rect.getWidth(), rect.getHeight());
+
     qDebug() << "x0 = " << rect.left_down.x << " y0 = " << rect.right_up.y << " width = " << rect.getWidth()
              << " height = " << rect.getHeight();
 
@@ -162,6 +171,6 @@ void MainWindow::drawPoints(QPainter& painter) {
     std::vector<Point> points = p_quad_tree_->getPoints();
 
     for (auto& point : points) {
-        painter.drawEllipse(QPointF(point.x, point.y), 0.3, 0.3);
+        painter.drawEllipse(QPointF(point.x, 99 - point.y), 0.3, 0.3);
     }
 }

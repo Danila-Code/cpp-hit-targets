@@ -19,7 +19,7 @@ bool Circle::hasPoint(Point point) const {
 Rectangle::Rectangle(Point l_down, Point r_up) : left_down(l_down), right_up(r_up) {}
 
 Point Rectangle::getMidPoint() const {
-    return Point{left_down.x + getWidth(), left_down.y + getHeight()};
+    return Point{left_down.x + getWidth() / 2, left_down.y + getHeight() / 2};
 }
 
 int Rectangle::getHeight() const {
