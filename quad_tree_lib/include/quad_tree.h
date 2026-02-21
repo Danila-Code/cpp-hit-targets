@@ -1,12 +1,12 @@
 #pragma once
 
 #include <memory>
-#include <optional>
 #include <vector>
 
 const int NODE_COUNT = 4;
 
 struct Point {
+    Point() = default;
     Point(int x_coord, int y_coord) : x(x_coord), y(y_coord) {}
 
     int x;
@@ -23,7 +23,9 @@ struct Circle {
 };
 
 struct Rectangle {
+    Rectangle() = default;
     Rectangle(Point l_down, Point r_up);
+
     Point getMidPoint() const;
 
     int getHeight() const;
@@ -38,23 +40,21 @@ struct Rectangle {
 
 class QuadTree {
 public:
-    explicit QuadTree(Rectangle rect);
-    ~QuadTree() {
-
-    };
-
-    void insert(Point point);
-
-    size_t getCount(Circle circle) const;
-
-private:
     class QuadNode {
     public:
-        explicit QuadNode(Rectangle rect);
+        explicit QuadNode();
 
         bool insertPoint(Point point);
 
         size_t getCount(Circle circle) const;
+
+        const QuadTree::QuadNode* const getSubnodes() const;
+
+        void setRect(Rectangle rect);
+
+        Rectangle getRect() const;
+
+        const std::vector<Point>& getPoints() const;
 
     private:
         void subdivideNode();
@@ -67,8 +67,25 @@ private:
 
         // four nodes that divide node rect_ on four rectangle areas
         // order of sub_nodes_: left down, right down, left up, right up
-        std::optional<std::vector<QuadNode>> sub_nodes_;
+        std::unique_ptr<QuadNode[]> subnodes_;
     };
+
+public:
+    explicit QuadTree(Rectangle rect);
+    ~QuadTree() {
+
+    };
+
+    void insert(Point point);
+
+    size_t getCount(Circle circle) const;
+
+    const QuadTree::QuadNode* const getRoot() const;
+
+    const std::vector<Point> getPoints() const;
+
+private:
+    void getPointsRec(const QuadNode* const node, std::vector<Point>& all_points) const;
 
 private:
     std::unique_ptr<QuadNode> root_;

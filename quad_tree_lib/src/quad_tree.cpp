@@ -42,7 +42,7 @@ bool Rectangle::intersectCircle(const Circle& circle) const {
 }
 
 //================= class QuadTree::QuadNode methods =============================
-QuadTree::QuadNode::QuadNode(Rectangle rect) : rect_{rect} {
+QuadTree::QuadNode::QuadNode() {
     points_.reserve(NODE_COUNT);
 }
 
@@ -52,13 +52,13 @@ bool QuadTree::QuadNode::insertPoint(Point point) {
         return true;
     }
 
-    if (!sub_nodes_) {
+    if (!subnodes_) {
         subdivideNode();
     }
 
-    for (auto& subnode : sub_nodes_.value()) {
-        if (subnode.rect_.hasPoint(point)) {
-            return subnode.insertPoint(point);
+    for (int i = 0; i < NODE_COUNT; ++i) {
+        if (subnodes_[i].rect_.hasPoint(point)) {
+            return subnodes_[i].insertPoint(point);
         }
     }
     return false;
@@ -77,22 +77,37 @@ size_t QuadTree::QuadNode::getCount(Circle circle) const {
         }
     }
 
-    if (sub_nodes_.has_value()) {
-        for (const auto& node : sub_nodes_.value()) {
-            points_count += node.getCount(circle);
+    if (subnodes_) {
+        for (int i = 0; i < NODE_COUNT; ++i) {
+            points_count += subnodes_[i].getCount(circle);
         }
     }
     return points_count;
-};
+}
+
+const QuadTree::QuadNode* const QuadTree::QuadNode::getSubnodes() const {
+    return subnodes_.get();
+}
+
+void QuadTree::QuadNode::setRect(Rectangle rect) {
+    rect_ = rect;
+}
+
+Rectangle QuadTree::QuadNode::getRect() const {
+    return rect_;
+}
+
+const std::vector<Point>& QuadTree::QuadNode::getPoints() const {
+    return points_;
+}
 
 void QuadTree::QuadNode::subdivideNode() {
     const auto rects = divideRect();
-    std::vector<QuadNode> subnodes;
-    subnodes.reserve(NODE_COUNT);
-    for (size_t i = 0; i < rects.size(); ++i) {
-        subnodes.push_back(QuadNode(rects[i]));
+
+    subnodes_ = std::make_unique<QuadNode[]>(NODE_COUNT);
+    for (size_t i = 0; i < NODE_COUNT; ++i) {
+        subnodes_[i].setRect(rects[i]);
     }
-    sub_nodes_ = subnodes;
 }
 
 std::vector<Rectangle> QuadTree::QuadNode::divideRect() const {
@@ -105,7 +120,9 @@ std::vector<Rectangle> QuadTree::QuadNode::divideRect() const {
 }
 
 //================= class QuadTree methods =============================
-QuadTree::QuadTree(Rectangle rect) : root_{std::make_unique<QuadTree::QuadNode>(rect)} {}
+QuadTree::QuadTree(Rectangle rect) : root_{std::make_unique<QuadTree::QuadNode>()} {
+    root_->setRect(rect);
+}
 
 void QuadTree::insert(Point point) {
     root_->insertPoint(point);
@@ -113,4 +130,35 @@ void QuadTree::insert(Point point) {
 
 size_t QuadTree::getCount(Circle circle) const {
     return root_->getCount(circle);
+}
+
+const QuadTree::QuadNode* const QuadTree::getRoot() const {
+    return root_.get();
+}
+
+const std::vector<Point> QuadTree::getPoints() const {
+    std::vector<Point> all_points;
+
+    getPointsRec(root_.get(), all_points);
+
+    return all_points;
+}
+
+void QuadTree::getPointsRec(const QuadNode* const node, std::vector<Point>& all_points) const {
+    if (!node) {
+        return;
+    }
+
+    auto points = node->getPoints();
+
+    all_points.insert(all_points.end(), points.begin(), points.end());
+
+    auto subnodes = node->getSubnodes();
+    if (!subnodes) {
+        return;
+    }
+
+    for (int i = 0; i < NODE_COUNT; ++i) {
+        getPointsRec(&subnodes[i], all_points);
+    }
 }
